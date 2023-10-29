@@ -25,12 +25,12 @@ driver.get(url)
 
 time.sleep(5)
 
-# 
+#
 WebDriverWait(driver, 50).until(
     EC.element_to_be_clickable(
         (
             By.XPATH,
-            '//*[@id="react-root"]/div/div/div[2]/main/div/div/div[1]/div[1]/div/div[3]/div[5]/a/div'
+            '//*[@id="react-root"]/div/div/div[2]/main/div/div/div[1]/div[1]/div/div[3]/div[5]/a/div',
         )
     )
 ).click()
