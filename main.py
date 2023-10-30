@@ -148,7 +148,7 @@ last_height = driver.execute_script("return document.body.scrollHeight")
 post_count = 0
 while True:
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-    time.sleep(6)
+    time.sleep(2)
 
     new_height = driver.execute_script("return document.body.scrollHeight")
     tweet_elements = driver.find_elements(

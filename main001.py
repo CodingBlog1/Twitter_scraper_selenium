@@ -4,10 +4,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 from dotenv import load_dotenv
-import os
+import os   
 import pandas as pd
 from collections import defaultdict
-
 from selenium.webdriver.support import expected_conditions as EC
 
 
@@ -143,13 +142,12 @@ def get_user_info(driver):
 def scrape_tweets(driver):
     my_dict = defaultdict(list)
     post_count = 0
-    last_height = driver.execute_script("return document.body.scrollHeight")
-
+    desired_scroll_height = 1000
     while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-        time.sleep(6)
+        current_scroll_height = driver.execute_script("return window.scrollY")
+        driver.execute_script(f"window.scrollTo(0, {current_scroll_height + desired_scroll_height})")
 
-        new_height = driver.execute_script("return document.body.scrollHeight")
+        time.sleep(6)
         tweet_elements = driver.find_elements(
             By.CSS_SELECTOR, 'article[data-testid="tweet"]'
         )
@@ -169,23 +167,32 @@ def scrape_tweets(driver):
             comments = tweet_element.find_element(
                 By.CSS_SELECTOR, 'div[data-testid="reply"]'
             )
-            like = tweet_element.find_element(By.CSS_SELECTOR, 'div[data-testid="like"]')
+            
+            retweet = tweet_element.find_element(By.CSS_SELECTOR,'div[data-testid="retweet"]')
+            like = tweet_element.find_element(By.CSS_SELECTOR,'div[data-testid="like"]')
+            post_date = tweet_element.find_element(By.CSS_SELECTOR,'div[data-testid="User-Name"]')
+            pd_post = str(post_date.text)
+            print(type(pd_post))
+            print(pd_post)
+            date = pd_post.rsplit("·")[-1].strip()
 
             print("linkes", like.text)
             print("post_count", post_count)
             print("post_src", post_src)
+            print('retweet',retweet.text)
+            print('post_date',date)
+            print('-------------------------------------------------------------------------------------------------')
+            
 
-            my_dict["Likes"].append(like.text)
             my_dict["Number of Comments"].append(comments.text)
+            my_dict['Number of Retweet'].append(retweet.text)
+            my_dict["Likes"].append(like.text)
+            
+            my_dict['Date of Post'].append(date)
             my_dict["Post Source URL"].append(post_src)
 
-        if post_count >= 100:
+        if post_count >= 50:
             break
-        if new_height == last_height:
-            break
-        
-        last_height = new_height
-
     return dict(my_dict)
 
 
@@ -193,20 +200,16 @@ def main():
     load_dotenv()
     username = os.getenv("USERNAME001")
     password = os.getenv("PASSWORD")
-
+    search_query = os.getenv('SEARCH_QUERY')
     driver = login_twitter(username, password)
-
-    search_query = "salman khan"
+    
     search_twitter(driver, search_query)
-
     location, joined_date, following_count, followers_count = get_user_info(driver)
-    # print()
-
     tweet_data = scrape_tweets(driver)
 
     data_df = pd.DataFrame.from_dict(tweet_data)
     print(data_df)
-    data_df.to_excel(f"{username}_001.xlsx", index=False)
+    data_df.to_excel(f"{search_query}_001.xlsx", index=False)
 
     driver.quit()
 
